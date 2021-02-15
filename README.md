@@ -23,7 +23,9 @@ Quicklink attempts to make navigations to subsequent pages load faster. It:
 
 This project aims to be a drop-in solution for sites to prefetch links based on what is in the user's viewport. It also aims to be small (**< 1KB minified/gzipped**).
 
-## Installation
+## Multi page apps
+
+### Installation
 
 For use with [node](https://nodejs.org) and [npm](https://npmjs.com):
 
@@ -33,7 +35,7 @@ npm install --save quicklink
 
 You can also grab `quicklink` from [unpkg.com/quicklink](https://unpkg.com/quicklink).
 
-## Usage
+### Usage
 
 Once initialized, `quicklink` will automatically prefetch URLs for links that are in-viewport during idle time.
 
@@ -64,11 +66,45 @@ ES Module import:
 import { listen, prefetch } from "quicklink";
 ```
 
-The above options are best for multi-page sites. Single-page apps have a few options available for using quicklink with a router:
+## Single page apps (React)
 
-* Call `quicklink.listen()` once a navigation to a new route has completed
-* Call `quicklink.listen()` against a specific DOM element / component
-* Call `quicklink.prefetch()` with a custom set of URLs to prefetch
+### Installation
+
+First, install the packages with [node](https://nodejs.org) and [npm](https://npmjs.com):
+
+```sh
+npm install quicklink webpack-route-manifest --save-dev
+```
+
+Then, configure Webpack route manifest into your project, as explained [here](https://github.com/lukeed/webpack-route-manifest).
+This will generate a map of routes and chunks called `rmanifest.json`. It can be obtained at:
+
+* URL: `site_url/rmanifest.json`
+* Window object: `window.__rmanifest`
+
+### Usage
+
+Import `quicklink` React HOC where want to add prefetching functionality. 
+Wrap your routes with the `withQuicklink()` HOC.
+
+Example:
+
+```sh
+import { withQuicklink } from 'quicklink/dist/react/hoc.js';
+
+const options = {
+  origins: []
+};
+
+<Suspense fallback={<div>Loading...</div>}>
+  <Route path="/" exact component={withQuicklink(Home, options)} />
+  <Route path="/blog" exact component={withQuicklink(Blog, options)} />
+  <Route path="/blog/:title" component={withQuicklink(Article, options)} />
+  <Route path="/about" exact component={withQuicklink(About, options)} />
+</Suspense>
+```
+
+
 
 ## API
 
@@ -308,6 +344,18 @@ quicklink.listen({
 });
 ```
 
+### Custom URL to prefetch via hrefFn callback
+
+The hrefFn method allows to build the URL to prefetch (e.g. API endpoint) on the fly instead of the prefetching the `href` attribute URL.
+
+```js
+quicklink.listen({
+  hrefFn: function(element) {
+    return element.href.replace('html','json');
+  }
+});
+```
+
 ## Browser Support
 
 The prefetching provided by `quicklink` can be viewed as a [progressive enhancement](https://www.smashingmagazine.com/2009/04/progressive-enhancement-what-it-is-and-how-to-use-it/). Cross-browser support is as follows:
@@ -343,6 +391,7 @@ After installing `quicklink` as a dependency, you can use it as follows:
 
 * [Using Quicklink in a multi-page site](https://github.com/GoogleChromeLabs/quicklink/tree/master/demos/news)
 * [Using Quicklink with Service Workers (via Workbox)](https://github.com/GoogleChromeLabs/quicklink/tree/master/demos/news-workbox)
+* [Using Quicklink to prefetch API calls instead of `href` attribute](https://github.com/GoogleChromeLabs/quicklink/tree/master/demos/hrefFn)
 
 ### Research
 
@@ -364,7 +413,7 @@ To workaround this problem, you can consider passing along session information v
 
 ### Ad-related considerations
 
-Sites that rely on ads as a source of monetization should not prefetch ad-links, to avoid unintentionally countinig clicks against those ad placements, which can lead to inflated Ad CTR (click-through-rate).
+Sites that rely on ads as a source of monetization should not prefetch ad-links, to avoid unintentionally counting clicks against those ad placements, which can lead to inflated Ad CTR (click-through-rate).
 
 Ads appear on sites mostly in two ways:
 
